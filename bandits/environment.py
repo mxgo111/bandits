@@ -3,7 +3,7 @@ import numpy as np
 import seaborn as sns
 import scipy.stats as stats
 
-from bandits.agent import BetaAgent
+from agent import BetaAgent
 
 
 class Environment(object):
@@ -17,16 +17,18 @@ class Environment(object):
         for agent in self.agents:
             agent.reset()
 
-    def run(self, trials=100, experiments=1):
+    def run(self, trials=100, experiments=1, budget=10):
         scores = np.zeros((trials, len(self.agents)))
         optimal = np.zeros_like(scores)
 
         for _ in range(experiments):
             self.reset()
+            # remaining_budget = np.ones(len(self.agents)) * budget
             for t in range(trials):
                 for i, agent in enumerate(self.agents):
                     action = agent.choose()
                     reward, is_optimal = self.bandit.pull(action)
+                    # reward = reward * 2 - 1 # for -1 and +1 rewards
                     agent.observe(reward)
 
                     scores[t, i] += reward

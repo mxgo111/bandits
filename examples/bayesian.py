@@ -3,11 +3,13 @@ Takes advantage of multicore systems to speed up the simulation runs.
 """
 import matplotlib
 matplotlib.use('qt4agg')
-from bandits.agent import Agent, BetaAgent
-from bandits.bandit import BernoulliBandit, BinomialBandit
-from bandits.policy import GreedyPolicy, EpsilonGreedyPolicy, UCBPolicy
-from bandits.environment import Environment
+import sys
+sys.path.append("/Users/mxgo/classes/cs282br/bandits/bandits")
 
+from agent import Agent, BetaAgent
+from bandit import BernoulliBandit, BinomialBandit
+from policy import GreedyPolicy, EpsilonGreedyPolicy, UCBPolicy
+from environment import Environment
 
 class BernoulliExample:
     label = 'Bayesian Bandits - Bernoulli'
@@ -30,8 +32,8 @@ class BinomialExample:
 
 
 if __name__ == '__main__':
-    experiments = 500
-    trials = 1000
+    experiments = 50
+    trials = 100
 
     example = BernoulliExample()
     # example = BinomialExample()
