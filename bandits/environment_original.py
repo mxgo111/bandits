@@ -5,7 +5,6 @@ import scipy.stats as stats
 
 from agent import BetaAgent
 
-budget = 10
 
 class Environment(object):
     def __init__(self, bandit, agents, label='Multi-Armed Bandit'):
@@ -18,68 +17,40 @@ class Environment(object):
         for agent in self.agents:
             agent.reset()
 
-    def run(self, trials=100, experiments=1, budget=budget):
+    def run(self, trials=100, experiments=1, budget=None):
         scores = np.zeros((trials, len(self.agents)))
-        print(scores.shape)
-        total_budget = np.ones((trials, len(self.agents))) * budget
-        total_budget_experiments = np.zeros(total_budget.shape)
-        survival_rates = np.zeros(total_budget.shape)
         optimal = np.zeros_like(scores)
 
         for _ in range(experiments):
             self.reset()
             for t in range(trials):
                 for i, agent in enumerate(self.agents):
-                    if total_budget[t,i] <= 0:
-                        if t < trials - 1:
-                            total_budget[t+1,i] = total_budget[t,i]
-                        # print(f"Agent {i} has already died")
-                        continue
-                    survival_rates[t,i] += 1
                     action = agent.choose()
                     reward, is_optimal = self.bandit.pull(action)
                     agent.observe(reward)
-
-                    reward = reward * 2 - 1 # for -1 and +1 rewards
-
-                    if t < trials - 1:
-                        total_budget[t+1, i] = total_budget[t, i] + reward
-                    total_budget_experiments[t,i] += total_budget[t,i]
 
                     scores[t, i] += reward
                     if is_optimal:
                         optimal[t, i] += 1
 
-        return scores / experiments, optimal / experiments, total_budget_experiments / experiments, survival_rates / experiments
+        return scores / experiments, optimal / experiments, None, None
 
-    def plot_results(self, scores, optimal, budgets, survival_rates, savefig):
-        plt.figure(figsize=(30, 40))
+    def plot_results(self, scores, optimal, budgets=None, survival_rates=None):
         sns.set_style('white')
         sns.set_context('talk')
-        plt.subplot(4, 1, 1)
+        plt.subplot(2, 1, 1)
         plt.title(self.label)
         plt.plot(scores)
         plt.ylabel('Average Reward')
         plt.legend(self.agents, loc=4)
-        plt.subplot(4, 1, 2)
+        plt.subplot(2, 1, 2)
         plt.plot(optimal * 100)
-        # plt.ylim(0, 100)
+        plt.ylim(0, 100)
         plt.ylabel('% Optimal Action')
         plt.xlabel('Time Step')
         plt.legend(self.agents, loc=4)
-        plt.subplot(4, 1, 3)
-        plt.plot(budgets)
-        # plt.ylim(0, 10)
-        plt.ylabel('Remaining Budget')
-        plt.xlabel('Time Step')
-        plt.legend(self.agents, loc=4)
-        plt.subplot(4, 1, 4)
-        plt.plot(survival_rates)
-        plt.ylabel('Survival Rate')
-        plt.xlabel('Time Step')
-        plt.legend(self.agents, loc=4)
         sns.despine()
-        plt.savefig(savefig)
+        plt.savefig("plots/bernoulli_regular")
         plt.show()
 
     def plot_beliefs(self):

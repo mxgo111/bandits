@@ -52,6 +52,88 @@ class Agent(object):
         return self._value_estimates
 
 
+class TestAgent(object):
+    """
+    Our TestAgent
+    """
+    def __init__(self, bandit, policy=None, budget=10, c=1, prior=0, gamma=None):
+        self.policy = policy
+        self.k = bandit.k
+        self.prior = prior
+        self.budgets = [budget]
+        self.gamma = gamma
+        self._value_estimates = prior*np.ones(self.k)
+        self.action_attempts = np.zeros(self.k)
+        self.t = 0
+        self.c = c
+        self.last_action = None
+
+    def __str__(self):
+        return "Our Policy"
+
+    def reset(self):
+        """
+        Resets the agent's memory to an initial state.
+        """
+        self._value_estimates[:] = self.prior
+        self.action_attempts[:] = 0
+        self.last_action = None
+        self.t = 0
+        self.budgets = [self.budgets[0]]
+
+    # based off UCB
+    # return list of best arms based on ucb
+    def ucb_choose(self):
+        exploration = np.log(self.t+1) / self.action_attempts
+        exploration[np.isnan(exploration)] = 0
+        exploration = np.power(exploration, 1/self.c)
+
+        q = self.value_estimates + exploration
+        action = np.argmax(q)
+        check = np.where(q == q[action])[0]
+        if len(check) == 1:
+            choices = [action]
+        else:
+            choices = check
+        assert len(choices) > 0
+        return choices
+
+    def choose(self):
+        if len(self.budgets) < 2:
+            action = np.random.randint(self.k)
+        elif self.budgets[-1] > self.budgets[-2]: # or some more elaborate criteria
+            action = self.last_action
+        else:
+            best_arms_ucb = self.ucb_choose()
+            if self.last_action not in best_arms_ucb:
+                action = np.random.choice(best_arms_ucb)
+            else:
+                action = self.last_action
+        self.last_action = action
+
+        assert action != None
+
+        return action
+
+    def observe(self, reward):
+        self.action_attempts[self.last_action] += 1
+
+        if self.gamma is None:
+            g = 1 / self.action_attempts[self.last_action]
+        else:
+            g = self.gamma
+        q = self._value_estimates[self.last_action]
+
+        self._value_estimates[self.last_action] += g*(reward - q)
+        self.t += 1
+
+        self.budgets.append(self.budgets[-1] + 2 * reward - 1)
+
+    @property
+    def value_estimates(self):
+        return self._value_estimates
+
+
 class GradientAgent(Agent):
     """
     The Gradient Agent learns the relative difference between actions instead of

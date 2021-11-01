@@ -37,6 +37,30 @@ class EpsilonGreedyPolicy(Policy):
                 return np.random.choice(check)
 
 
+class TestPolicy(Policy):
+    """
+    Test policy
+    """
+    def __init__(self, c):
+        self.c = c
+
+    def __str__(self):
+        return 'Test Policy (c={})'.format(self.c)
+
+    def choose(self, agent):
+        exploration = np.log(agent.t+1) / agent.action_attempts
+        exploration[np.isnan(exploration)] = 0
+        exploration = np.power(exploration, 1/self.c)
+
+        q = agent.value_estimates + exploration
+        action = np.argmax(q)
+        check = np.where(q == q[action])[0]
+        if len(check) == 1:
+            return action
+        else:
+            return np.random.choice(check)
+
+
 class GreedyPolicy(EpsilonGreedyPolicy):
     """
     The Greedy policy only takes the best apparent action, with ties broken by

@@ -64,7 +64,10 @@ class BinomialBandit(MultiArmedBandit):
 
     def reset(self):
         if self.p is None:
-            self.action_values = np.random.uniform(size=self.k)
+            # self.action_values = np.random.uniform(size=self.k)
+            # self.action_values = np.linspace(0.01, 0.98, self.k)
+            # self.action_values = np.linspace(0.45, 0.55, self.k)
+            self.action_values = np.linspace(0.3, 0.7, self.k)
         else:
             self.action_values = self.p
         self.bin.distribution.p = self.action_values
